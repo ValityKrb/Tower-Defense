@@ -1,7 +1,6 @@
 import os
+import mouse as mouse
 import pygame
-import sys
-
 
 class BaloonSetting:
     def __init__(self, image: str, hp: float, speed: float) -> None:
@@ -9,43 +8,25 @@ class BaloonSetting:
         self.hp = hp
         self.speed = speed
 
+
+class TowerSetting:
+    def __init__(self, image: str, price: int, range: int, damage: int, fire_rate: int) -> None:
+        self.image = image
+        self.price = price
+        self.range = range
+        self.damage = damage
+        self.fire_rate = fire_rate
+
+
 class Settings:
-    pygame.init()
-    #Startbildschirm
-    res = (1276,904)
-    screen = pygame.display.set_mode(res)
-    color = (255, 255, 255)
-    color_light = (170, 170, 170)
-    color_dark = (100, 100, 100)
-    width = screen.get_width()
-    height = screen.get_height()
-
-    smallfont = pygame.font.SysFont("Arial", 35)
-    text = smallfont.render("quit", True, color)
-    while True:
-        for ev in pygame.event.get():
-            if ev.type == pygame.QUIT:
-                pygame.quit()
-
-            if ev.type == pygame.MOUSEBUTTONDOWN:
-                    if width/2 <= mouse[0] <= width/2+140 and height/2 <= mouse[1] <= height/2+40:
-                        pygame.quit()
-        screen.fill((60, 25, 60))
-        mouse = pygame.mouse.get_pos()
-        if width/2 <= mouse[0] <= width/2+140 and height/2 <= mouse[1] <= height/2+40:
-            pygame.draw.rect(screen,color_light,[width/2, height/2,140,40])
-        else:
-            pygame.draw.rect(screen,color_dark,[width/2, height/2,140,40])
-            screen.blit(text, (width/2+50, height/2))
-        pygame.display.update
 
     _window_width = 1275
     _window_height = 904
-    
+
     @staticmethod
     def get_window_size():
         return Settings._window_width, Settings._window_height
-    
+
     _window_caption = "Bloons Clone"
     _window_fps = 60
     _window_delta_time = 1.0 / _window_fps
@@ -86,8 +67,14 @@ class Settings:
     ]
 
     _towers = [
-        os.path.join(_tower_directory, "tower_1.png"),
+        TowerSetting(os.path.join(_tower_directory, "tower_1.png"), 15, 100, 1, 1000),
+        TowerSetting(os.path.join(_tower_directory, "tower_2.png"), 25, 150, 2, 500),
+        TowerSetting(os.path.join(_tower_directory, "tower_3.png"), 35, 200, 3, 300),
+        TowerSetting(os.path.join(_tower_directory, "tower_4.png"), 45, 250, 4, 200)
     ]
+
+    _bullet_speed = 5
+
 
 class Timer:
     def __init__(self, duration, with_start=False) -> None:
@@ -106,6 +93,7 @@ class Timer:
             return True
         return False
 
+
 class Background(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
@@ -114,9 +102,10 @@ class Background(pygame.sprite.Sprite):
             os.path.join(Settings._assets_directory, "background.jpg")
         )
         self.image = pygame.transform.scale(self.image, (1000, 720))
-    
+
     def draw(self, screen):
         screen.blit(self.image, (0, 0))
+
 
 class Overlay(pygame.sprite.Sprite):
     def __init__(self):
@@ -126,9 +115,10 @@ class Overlay(pygame.sprite.Sprite):
             os.path.join(Settings._assets_directory, "overlay.png")
         )
         self.image = pygame.transform.scale(self.image, Settings.get_window_size())
-    
+
     def draw(self, screen):
         screen.blit(self.image, (0, 0))
+
 
 class MapSpot(pygame.sprite.Sprite):
     def __init__(self, x: int, y: int):
@@ -158,14 +148,20 @@ class MapSpot(pygame.sprite.Sprite):
     def update(self, *args, **kwargs):
         if kwargs.get('click', False) and self.hovered:
             if self.tower is not None:
-                game.towers.remove(self.tower)
-                self.tower = None
-                
-                return
+                try:
+                    if game.coins >= Settings._towers[self.tower.level].price:
+                        game.coins -= Settings._towers[self.tower.level].price
+                        self.tower.level += 1
+                        self.tower.__init__(self.tower.rect.x, self.tower.rect.y, self, self.tower.level)
 
-            self.tower = TowerLvl1(self.rect.x, self.rect.y, self) if self.tower is None else None
+                    return
+                except IndexError:
+                    print("Tower is maxed out")
 
-            if self.tower:
+            if game.coins >= Settings._towers[0].price:
+                game.coins -= Settings._towers[0].price
+                self.tower = Tower(self.rect.x, self.rect.y, self, 1)
+
                 game.towers.add(self.tower)
                 self.image = self.surface_image if self.tower is not None else self.add_image
                 return
@@ -179,16 +175,17 @@ class MapSpot(pygame.sprite.Sprite):
         cursor_pos = pygame.mouse.get_pos()
 
         self.hovered = cursor_pos[0] in x_range and cursor_pos[1] in y_range
-        
+
         if self.hovered:
             self.image = self.add_image
         else:
             self.image = self.surface_image
 
+
 class Baloon(pygame.sprite.Sprite):
     def __init__(self, level):
         super().__init__()
-        
+
         try:
             __settings = Settings._baloons[level - 1]
         except:
@@ -207,7 +204,7 @@ class Baloon(pygame.sprite.Sprite):
 
         self.path_index = 1
         self.path_item = Settings._path[self.path_index]
-    
+
     def move(self):
         heading = self.path_item - self.position
         dist = heading.length()
@@ -223,50 +220,54 @@ class Baloon(pygame.sprite.Sprite):
             self.path_item = Settings._path[self.path_index]
         else:
             self.speed = heading * self.speed_multiplier
-        
+
         self.position += self.speed
         self.rect.center = self.position
 
     def update(self):
         self.move()
-    
+
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
+
 class Tower(pygame.sprite.Sprite):
-    def __init__(self, x: int, y: int, spot: MapSpot):
+    def __init__(self, x: int, y: int, spot: MapSpot, level: int):
         super().__init__()
 
-        self.image = pygame.image.load(Settings._towers[0])
+        __settings = Settings._towers[level - 1]
+
+        self.level = level
+        self.image = pygame.image.load(__settings.image)
         self.image = pygame.transform.scale(self.image, (50, 50))
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
 
-        self.range = 100
-        self.damage = 1
-        self.fire_rate = 1000
+        self.range = __settings.range
+        self.damage = __settings.damage
+        self.fire_rate = __settings.fire_rate
         self.fire_timer = Timer(self.fire_rate)
         self.target = None
         self.spot = spot
-    
+
     def update(self, *args, **kwargs):
         if self.target is None:
             self.target = self.find_target()
-        
+
         if self.target is not None:
             if self.fire_timer.is_next_stop_reached():
                 self.fire()
-    
+
     def draw(self, screen):
         screen.blit(self.image, self.rect)
-    
+
     def find_target(self):
         for baloon in game.baloons.sprites():
             if baloon.position.distance_to(self.rect.center) <= self.range:
                 return baloon
         return None
-    
+
     def fire(self):
         if self.target is not None:
             self.target.hp -= self.damage
@@ -275,9 +276,6 @@ class Tower(pygame.sprite.Sprite):
                 self.target.kill()
                 self.target = None
 
-class TowerLvl1(Tower):
-    def __init__(self, x: int, y: int, spot: MapSpot):
-        super().__init__(x, y, spot)
 
 class Coinsbar(pygame.sprite.Sprite):
     def __init__(self):
@@ -297,7 +295,6 @@ class Coinsbar(pygame.sprite.Sprite):
         self.coins_text_rect.x = self.rect.x + self.rect.width + 10
         self.coins_text_rect.centery = 720 + (Settings._window_height - 720) // 2
 
-
     def update(self):
         if game.coins != self.coins:
             self.coins = game.coins
@@ -307,7 +304,6 @@ class Coinsbar(pygame.sprite.Sprite):
             self.coins_text_rect = self.coins_text_surface.get_rect()
             self.coins_text_rect.x = old_rect.x
             self.coins_text_rect.centery = old_rect.centery
-
 
     def draw(self, screen):
         screen.blit(self.image, self.rect)
@@ -343,13 +339,13 @@ class Healthbar(pygame.sprite.Sprite):
         self.hp_bar.fill((255, 0, 0))
         self.hp_bar_rect = self.hp_bar.get_rect()
         self.hp_bar_rect.center = self.rect.center
-    
+
     def draw(self, screen):
         screen.blit(self.hp_bar_back, self.hp_bar_rect)
         screen.blit(self.hp_bar, self.hp_bar_rect)
         screen.blit(self.image, self.rect)
         screen.blit(self.health_icon, self.health_icon_rect)
-    
+
     def update(self, *args, **kwargs):
         if kwargs.get('hit', False):
             try:
@@ -375,7 +371,7 @@ class Game:
         self.screen = pygame.display.set_mode(Settings.get_window_size())
         self.clock = pygame.time.Clock()
         self.running = True
-        
+        self.startscreen = Startscreen()
         self.background = Background()
         self.healthbar = Healthbar()
         self.overlay = Overlay()
@@ -386,25 +382,26 @@ class Game:
         self.map_spots = pygame.sprite.Group()
         for spot in Settings._map_spots:
             self.map_spots.add(MapSpot(*spot))
-        
+
         self.towers = pygame.sprite.Group()
 
         self.baloon_count = 10
         self.baloon_spawned = 0
         self.baloon_level = 1
 
-        self.coins = 0
+        self.coins = Settings._towers[0].price
 
         self.baloon_spawn_timer = Timer(750)
         self.baloon_timer_cooldown = None
-    
-    def run(self) -> None: 
+
+    def run(self) -> None:
         while self.running:
+            self.startscreen.run()
             self.clock.tick(Settings._window_fps)
             self.handle_events()
             self.update()
             self.draw()
-    
+
     def handle_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -412,10 +409,10 @@ class Game:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     self.map_spots.update(click=True)
-    
+
     def hit(self, damage: int) -> None:
         self.healthbar.update(hit=True, damage=damage)
-    
+
     def update(self):
         self.map_spots.update()
         self.towers.update()
@@ -433,17 +430,17 @@ class Game:
             if self.baloon_count > 50:
                 self.baloon_count = 10
                 self.baloon_level += 1
-        
+
         # End level pause
         if self.baloon_timer_cooldown and self.baloon_timer_cooldown.is_next_stop_reached():
             self.baloon_timer_cooldown = None
-        
+
         # Spawn baloons
         if not self.baloon_timer_cooldown:
             if self.baloon_spawn_timer.is_next_stop_reached():
                 self.baloon_spawned += 1
                 self.baloons.add(Baloon(self.baloon_level))
-    
+
     def draw(self):
         self.screen.fill((0, 0, 0))
 
@@ -457,6 +454,35 @@ class Game:
         self.coinsbar.draw(self.screen)
 
         pygame.display.flip()
+
+class Startscreen():
+    pygame.init()
+    res = (1276, 904)
+    screen = pygame.display.set_mode(res)
+    color = (255, 255, 255)
+    color_light = (170, 170, 170)
+    color_dark = (100, 100, 100)
+    width = screen.get_width()
+    height = screen.get_height()
+
+    smallfont = pygame.font.SysFont("Arial", 35)
+    text = smallfont.render("quit", True, color)
+    def run(self):
+        for ev in pygame.event.get():
+            if ev.type == pygame.QUIT:
+                pygame.quit()
+            if ev.type == pygame.MOUSEBUTTONDOWN:
+                    if width/2 <= mouse[0] <= width/2+140 and height/2 <= mouse[1] <= height/2+40:
+                        pygame.quit()
+        screen.fill((60, 25, 60))
+        mouse = pygame.mouse.get_pos()
+        if width/2 <= mouse[0] <= width/2+140 and height/2 <= mouse[1] <= height/2+40:
+            pygame.draw.rect(screen,color_light,[width/2, height/2,140,40])
+        else:
+            pygame.draw.rect(screen,color_dark,[width/2, height/2,140,40])
+            screen.blit(text, (width/2+50, height/2))
+        pygame.display.update()
+
 
 if __name__ == "__main__":
     game = Game()
