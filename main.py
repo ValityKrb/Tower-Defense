@@ -50,6 +50,8 @@ class Settings:
 
     _baloons = [
         BaloonSetting(os.path.join(_baloons_directory, "baloon_1.png"), 1, 1),
+        BaloonSetting(os.path.join(_baloons_directory, "baloon_2.png"), 2, 2),
+        BaloonSetting(os.path.join(_baloons_directory, "baloon_3.png"), 4, 2),
     ]
 
     _towers = [
@@ -153,15 +155,21 @@ class MapSpot(pygame.sprite.Sprite):
             self.image = self.surface_image
 
 class Baloon(pygame.sprite.Sprite):
-    def __init__(self):
+    def __init__(self, level):
         super().__init__()
-        __settings = Settings._baloons[0]
+        
+        try:
+            __settings = Settings._baloons[level - 1]
+        except:
+            print(f"Baloon level {level} not found")
+            __settings = Settings._baloons[0]
 
         self.image = pygame.image.load(__settings.image)
         self.image = pygame.transform.scale(self.image, (40, 50))
         self.rect = self.image.get_rect()
         self.position = pygame.Vector2(Settings._path[0])
         self.rect.center = self.position
+        self.initial_hp = __settings.hp
         self.hp = __settings.hp
         self.speed_multiplier = __settings.speed
         self.speed = pygame.Vector2(0, 0)
@@ -193,10 +201,6 @@ class Baloon(pygame.sprite.Sprite):
     
     def draw(self, screen):
         screen.blit(self.image, self.rect)
-
-class BaloonLvl1(Baloon):
-    def __init__(self):
-        super().__init__()
 
 class Tower(pygame.sprite.Sprite):
     def __init__(self, x: int, y: int, spot: MapSpot):
@@ -236,12 +240,48 @@ class Tower(pygame.sprite.Sprite):
         if self.target is not None:
             self.target.hp -= self.damage
             if self.target.hp <= 0:
+                game.coins += self.target.initial_hp
                 self.target.kill()
                 self.target = None
 
 class TowerLvl1(Tower):
     def __init__(self, x: int, y: int, spot: MapSpot):
         super().__init__(x, y, spot)
+
+class Coinsbar(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+
+        coins_icon = pygame.image.load(os.path.join(Settings._assets_directory, "coins.png"))
+        coins_icon = pygame.transform.scale(coins_icon, (50, 50))
+        self.image = coins_icon
+        self.rect = self.image.get_rect()
+        self.rect.centerx = Settings._window_width // 2
+        self.rect.centery = 720 + (Settings._window_height - 720) // 2
+        self.coins = 0
+
+        self.coins_text = pygame.font.SysFont("comicsansms", 30)
+        self.coins_text_surface = self.coins_text.render(f"{self.coins}", True, (255, 255, 255))
+        self.coins_text_rect = self.coins_text_surface.get_rect()
+        self.coins_text_rect.x = self.rect.x + self.rect.width + 10
+        self.coins_text_rect.centery = 720 + (Settings._window_height - 720) // 2
+
+
+    def update(self):
+        if game.coins != self.coins:
+            self.coins = game.coins
+
+            old_rect = self.coins_text_rect
+            self.coins_text_surface = self.coins_text.render(f"{self.coins}", True, (255, 255, 255))
+            self.coins_text_rect = self.coins_text_surface.get_rect()
+            self.coins_text_rect.x = old_rect.x
+            self.coins_text_rect.centery = old_rect.centery
+
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+        screen.blit(self.coins_text_surface, self.coins_text_rect)
+
 
 class Healthbar(pygame.sprite.Sprite):
     def __init__(self) -> None:
@@ -262,8 +302,6 @@ class Healthbar(pygame.sprite.Sprite):
         self.health_icon_rect = self.health_icon.get_rect()
         self.health_icon_rect.centery = self.rect.centery
         self.health_icon_rect.x = self.rect.x - self.health_icon_rect.width - 10
-
-        print(self.health_icon_rect.x)
 
         self.max_hp = 100
         self.hp = 100
@@ -310,6 +348,7 @@ class Game:
         self.background = Background()
         self.healthbar = Healthbar()
         self.overlay = Overlay()
+        self.coinsbar = Coinsbar()
 
         self.baloons = pygame.sprite.Group()
 
@@ -321,6 +360,9 @@ class Game:
 
         self.baloon_count = 10
         self.baloon_spawned = 0
+        self.baloon_level = 1
+
+        self.coins = 0
 
         self.baloon_spawn_timer = Timer(750)
         self.baloon_timer_cooldown = None
@@ -349,12 +391,17 @@ class Game:
         self.baloons.update()
         self.healthbar.update()
         self.overlay.update()
+        self.coinsbar.update()
 
         # Trigger level pause
         if self.baloon_spawned >= self.baloon_count and not self.baloon_timer_cooldown:
             self.baloon_spawned = 0
-            self.baloon_count = int(self.baloon_count * 2.5)
             self.baloon_timer_cooldown = Timer(30 * 1000)
+
+            self.baloon_count += 10
+            if self.baloon_count > 50:
+                self.baloon_count = 10
+                self.baloon_level += 1
         
         # End level pause
         if self.baloon_timer_cooldown and self.baloon_timer_cooldown.is_next_stop_reached():
@@ -364,7 +411,7 @@ class Game:
         if not self.baloon_timer_cooldown:
             if self.baloon_spawn_timer.is_next_stop_reached():
                 self.baloon_spawned += 1
-                self.baloons.add(BaloonLvl1())
+                self.baloons.add(Baloon(self.baloon_level))
     
     def draw(self):
         self.screen.fill((0, 0, 0))
@@ -376,6 +423,7 @@ class Game:
 
         self.overlay.draw(self.screen)
         self.healthbar.draw(self.screen)
+        self.coinsbar.draw(self.screen)
 
         pygame.display.flip()
 
