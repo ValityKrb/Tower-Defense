@@ -2,24 +2,19 @@ import os
 import mouse as mouse
 import pygame
 from tkinter import *
+from tkinter.ttk import *
 
 
 # Tkinter Startscreen
-
-
-def main():
-    root = Tk()
-    root.geometry("720x480")
-    root.title("Startbildschirm")
-    label1 = Label(root, text="Bloons Prototype", fg="black")
-    label1.pack(pady=20)
-    quit_button = Button(root, text="Spiel starten", command=root.destroy)
-    quit_button.pack(pady=20)
-
-
-main()
+root = Tk()
+root.geometry("600x280")
+root.title("Startbildschirm")
+photo = PhotoImage(file="C:/Users/walte/OneDrive/Desktop/bloons/assets/startscreen.png")
+panel1 = Label(root, image=photo)
+panel1.grid(row=0, column=0)
+exit_button = Button(root, text="Spiel starten", command=root.destroy)
+exit_button.grid(row=1, column=0)
 mainloop()
-
 
 
 class BaloonSetting:
