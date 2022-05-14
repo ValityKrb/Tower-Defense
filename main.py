@@ -1,6 +1,25 @@
 import os
 import mouse as mouse
 import pygame
+from tkinter import *
+
+
+# Tkinter Startscreen
+
+
+def main():
+    root = Tk()
+    root.geometry("720x480")
+    root.title("Startbildschirm")
+    label1 = Label(root, text="Bloons", fg="black")
+    quit_button = Button(root, text="Spiel starten", command=root.destroy)
+    quit_button.pack(pady=20)
+
+
+main()
+mainloop()
+
+
 
 class BaloonSetting:
     def __init__(self, image: str, hp: float, speed: float) -> None:
@@ -19,7 +38,6 @@ class TowerSetting:
 
 
 class Settings:
-
     _window_width = 1275
     _window_height = 904
 
@@ -371,7 +389,6 @@ class Game:
         self.screen = pygame.display.set_mode(Settings.get_window_size())
         self.clock = pygame.time.Clock()
         self.running = True
-        self.startscreen = Startscreen()
         self.background = Background()
         self.healthbar = Healthbar()
         self.overlay = Overlay()
@@ -396,7 +413,6 @@ class Game:
 
     def run(self) -> None:
         while self.running:
-            self.startscreen.run()
             self.clock.tick(Settings._window_fps)
             self.handle_events()
             self.update()
@@ -454,34 +470,6 @@ class Game:
         self.coinsbar.draw(self.screen)
 
         pygame.display.flip()
-
-class Startscreen():
-    pygame.init()
-    res = (1276, 904)
-    screen = pygame.display.set_mode(res)
-    color = (255, 255, 255)
-    color_light = (170, 170, 170)
-    color_dark = (100, 100, 100)
-    width = screen.get_width()
-    height = screen.get_height()
-
-    smallfont = pygame.font.SysFont("Arial", 35)
-    text = smallfont.render("quit", True, color)
-    def run(self):
-        for ev in pygame.event.get():
-            if ev.type == pygame.QUIT:
-                pygame.quit()
-            if ev.type == pygame.MOUSEBUTTONDOWN:
-                    if width/2 <= mouse[0] <= width/2+140 and height/2 <= mouse[1] <= height/2+40:
-                        pygame.quit()
-        screen.fill((60, 25, 60))
-        mouse = pygame.mouse.get_pos()
-        if width/2 <= mouse[0] <= width/2+140 and height/2 <= mouse[1] <= height/2+40:
-            pygame.draw.rect(screen,color_light,[width/2, height/2,140,40])
-        else:
-            pygame.draw.rect(screen,color_dark,[width/2, height/2,140,40])
-            screen.blit(text, (width/2+50, height/2))
-        pygame.display.update()
 
 
 if __name__ == "__main__":
