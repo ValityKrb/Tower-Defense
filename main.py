@@ -11,7 +11,8 @@ def main():
     root = Tk()
     root.geometry("720x480")
     root.title("Startbildschirm")
-    label1 = Label(root, text="Bloons", fg="black")
+    label1 = Label(root, text="Bloons Prototype", fg="black")
+    label1.pack(pady=20)
     quit_button = Button(root, text="Spiel starten", command=root.destroy)
     quit_button.pack(pady=20)
 
