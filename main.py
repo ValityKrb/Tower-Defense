@@ -16,6 +16,16 @@ exit_button = Button(root, text="Spiel starten", command=root.destroy)
 exit_button.grid(row=1, column=0)
 mainloop()
 
+class Sound:
+    def __init__(self, path):
+        self.path = path
+        pygame.init()
+        self.sound = pygame.mixer.music.load(self.path)
+        pygame.mixer.music.set_volume(.1)
+
+    def play_sound(self):
+        pygame.mixer.music.play(1, 0.0)
+
 
 class BaloonSetting:
     def __init__(self, image: str, hp: float, speed: float) -> None:
@@ -264,6 +274,8 @@ class Tower(pygame.sprite.Sprite):
         self.fire_timer = Timer(self.fire_rate)
         self.target = None
         self.spot = spot
+        sound = Sound("assets/sounds/buy.wav")
+        sound.play_sound()
 
     def update(self, *args, **kwargs):
         if self.target is None:
