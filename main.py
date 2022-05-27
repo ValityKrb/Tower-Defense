@@ -5,7 +5,6 @@ from tkinter import *
 from tkinter.ttk import *
 
 
-# Tkinter Startscreen
 root = Tk()
 root.geometry("600x280")
 root.title("Startbildschirm")
@@ -229,6 +228,7 @@ class Baloon(pygame.sprite.Sprite):
         self.path_index = 1
         self.path_item = Settings._path[self.path_index]
 
+
     def move(self):
         heading = self.path_item - self.position
         dist = heading.length()
@@ -294,6 +294,7 @@ class Tower(pygame.sprite.Sprite):
                 return baloon
         return None
 
+
     def fire(self):
         if self.target is not None:
             self.target.hp -= self.damage
@@ -301,7 +302,8 @@ class Tower(pygame.sprite.Sprite):
                 game.coins += self.target.initial_hp
                 self.target.kill()
                 self.target = None
-
+                sound = Sound("assets/sounds/pop1.wav")
+                sound.play_sound()
 
 class Coinsbar(pygame.sprite.Sprite):
     def __init__(self):
