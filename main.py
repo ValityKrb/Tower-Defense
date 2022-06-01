@@ -4,7 +4,6 @@ import pygame
 from tkinter import *
 from tkinter.ttk import *
 
-
 root = Tk()
 root.geometry("600x280")
 root.title("Startbildschirm")
@@ -14,6 +13,7 @@ panel1.grid(row=0, column=0)
 exit_button = Button(root, text="Spiel starten", command=root.destroy)
 exit_button.grid(row=1, column=0)
 mainloop()
+
 
 class Sound:
     def __init__(self, path):
@@ -60,20 +60,11 @@ class Settings:
     _tower_directory = os.path.join(_assets_directory, "towers")
 
     _path = [
-        (500, 0),
-        (500, 65),
-        (155, 65),
-        (155, 535),
-        (665, 535),
-        (665, 270),
-        (510, 270),
-        (510, 430),
-        (325, 430),
-        (325, 175),
-        (840, 175),
-        (840, 635),
-        (515, 635),
-        (515, 720)
+        (170, 0),
+        (170, 210),
+        (200, 210),
+        (335, 210),
+        (335, 125),
     ]
 
     _spot_size = 50
@@ -122,7 +113,7 @@ class Background(pygame.sprite.Sprite):
         super().__init__()
 
         self.image = pygame.image.load(
-            os.path.join(Settings._assets_directory, "background.jpg")
+            os.path.join(Settings._assets_directory, "background.png")
         )
         self.image = pygame.transform.scale(self.image, (1000, 720))
 
@@ -228,7 +219,6 @@ class Baloon(pygame.sprite.Sprite):
         self.path_index = 1
         self.path_item = Settings._path[self.path_index]
 
-
     def move(self):
         heading = self.path_item - self.position
         dist = heading.length()
@@ -294,7 +284,6 @@ class Tower(pygame.sprite.Sprite):
                 return baloon
         return None
 
-
     def fire(self):
         if self.target is not None:
             self.target.hp -= self.damage
@@ -304,6 +293,7 @@ class Tower(pygame.sprite.Sprite):
                 self.target = None
                 sound = Sound("assets/sounds/pop1.wav")
                 sound.play_sound()
+
 
 class Coinsbar(pygame.sprite.Sprite):
     def __init__(self):
