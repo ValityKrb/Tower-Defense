@@ -143,17 +143,6 @@ class Background(pygame.sprite.Sprite):
         screen.blit(self.image, (0, 0))
 
 
-class Overlay(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-
-        self.image = pygame.image.load(
-            os.path.join(Settings._assets_directory, "overlay.png")
-        )
-        self.image = pygame.transform.scale(self.image, Settings.get_window_size())
-
-    def draw(self, screen):
-        screen.blit(self.image, (0, 0))
 
 
 class MapSpot(pygame.sprite.Sprite):
@@ -413,7 +402,6 @@ class Game:
         self.running = True
         self.background = Background()
         self.healthbar = Healthbar()
-        self.overlay = Overlay()
         self.coinsbar = Coinsbar()
 
         self.baloons = pygame.sprite.Group()
@@ -456,7 +444,6 @@ class Game:
         self.towers.update()
         self.baloons.update()
         self.healthbar.update()
-        self.overlay.update()
         self.coinsbar.update()
 
         # Trigger level pause
@@ -487,7 +474,6 @@ class Game:
         self.towers.draw(self.screen)
         self.baloons.draw(self.screen)
 
-        self.overlay.draw(self.screen)
         self.healthbar.draw(self.screen)
         self.coinsbar.draw(self.screen)
 
