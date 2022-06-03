@@ -43,8 +43,8 @@ class TowerSetting:
 
 
 class Settings:
-    _window_width = 1275
-    _window_height = 904
+    _window_width = 1000
+    _window_height = 720
 
     @staticmethod
     def get_window_size():
@@ -314,15 +314,15 @@ class Coinsbar(pygame.sprite.Sprite):
         coins_icon = pygame.transform.scale(coins_icon, (50, 50))
         self.image = coins_icon
         self.rect = self.image.get_rect()
-        self.rect.centerx = Settings._window_width // 2
-        self.rect.centery = 720 + (Settings._window_height - 720) // 2
+        self.rect.centerx = Settings._window_width // 1.24
+        self.rect.centery = 79
         self.coins = 0
 
         self.coins_text = pygame.font.SysFont("comicsansms", 30)
         self.coins_text_surface = self.coins_text.render(f"{self.coins}", True, (255, 255, 255))
         self.coins_text_rect = self.coins_text_surface.get_rect()
-        self.coins_text_rect.x = self.rect.x + self.rect.width + 10
-        self.coins_text_rect.centery = 720 + (Settings._window_height - 720) // 2
+        self.coins_text_rect.x = Settings._window_width // 1.2
+        self.coins_text_rect.centery = 80
 
     def update(self):
         if game.coins != self.coins:
@@ -348,8 +348,8 @@ class Healthbar(pygame.sprite.Sprite):
         )
         self.image = pygame.transform.scale(self.image, (150, 40))
         self.rect = self.image.get_rect()
-        self.rect.centerx = Settings._window_width // 3
-        self.rect.centery = 720 + (Settings._window_height - 720) // 2
+        self.rect.centerx = Settings._window_width // 1.1
+        self.rect.centery = 25
 
         self.health_icon = pygame.image.load(
             os.path.join(Settings._assets_directory, 'heart.png')
