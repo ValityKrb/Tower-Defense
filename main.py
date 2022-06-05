@@ -1,19 +1,7 @@
 import os
-import mouse as mouse
 import pygame
 from tkinter import *
 from tkinter.ttk import *
-
-root = Tk()
-root.geometry("600x280")
-root.title("Startbildschirm")
-photo = PhotoImage(file="C:/Users/WalterJustin/Downloads/Tower-Defense-master/Tower-Defense-master/assets/startscreen.png")
-panel1 = Label(root, image=photo)
-panel1.grid(row=0, column=0)
-exit_button = Button(root, text="Spiel starten", command=root.destroy)
-exit_button.grid(row=1, column=0)
-mainloop()
-
 
 class Sound:
     def __init__(self, path):
@@ -111,6 +99,16 @@ class Settings:
 
     _bullet_speed = 5
 
+root = Tk()
+root.geometry("600x280")
+root.title("Startbildschirm")
+# photo = PhotoImage(file="C:/Users/WalterJustin/Downloads/Tower-Defense-master/Tower-Defense-master/assets/startscreen.png")
+photo = PhotoImage(file=os.path.join(Settings._assets_directory, 'startscreen.png'))
+panel1 = Label(root, image=photo)
+panel1.grid(row=0, column=0)
+exit_button = Button(root, text="Spiel starten", command=root.destroy)
+exit_button.grid(row=1, column=0)
+mainloop()
 
 class Timer:
     def __init__(self, duration, with_start=False) -> None:
@@ -141,9 +139,6 @@ class Background(pygame.sprite.Sprite):
 
     def draw(self, screen):
         screen.blit(self.image, (0, 0))
-
-
-
 
 class MapSpot(pygame.sprite.Sprite):
     def __init__(self, x: int, y: int):
@@ -275,7 +270,7 @@ class Tower(pygame.sprite.Sprite):
         self.fire_timer = Timer(self.fire_rate)
         self.target = None
         self.spot = spot
-        sound = Sound("assets/sounds/buy.wav")
+        sound = Sound(os.path.join(Settings._assets_directory, 'sounds', 'buy.wav'))
         sound.play_sound()
 
     def update(self, *args, **kwargs):
@@ -302,7 +297,7 @@ class Tower(pygame.sprite.Sprite):
                 game.coins += self.target.initial_hp
                 self.target.kill()
                 self.target = None
-                sound = Sound("assets/sounds/pop1.wav")
+                sound = Sound(os.path.join(Settings._assets_directory, 'sounds', 'pop1.wav'))
                 sound.play_sound()
 
 
